@@ -20,6 +20,39 @@ export const GameEventTypeMap = {
     [PlatformEventType.GameMessage]: 'Game message',
 }
 
+type ParseState = Record<string, any>
+type VarLength = number | { min: number, max: number }
+type VarString = string
+type MappingType = 'object' | 'string' | 'number'
+interface MappingTypeMap {
+    object: object
+    string: string
+    number: number
+}
+interface GameMapping {
+    type: MappingType
+    map: Array<MappingTypeMap[this['type']]>
+}
+interface TransformerField {
+    name: string
+    mapping?: string
+    length: number | VarString
+}
+interface GameTransformer {
+    eventName: string
+    eventType: number
+    length: VarLength
+    fields: Array<TransformerField>
+}
+type GameSpec = {
+    mappings: Record<string, GameMapping>
+    transformers: Array<GameTransformer>
+}
+interface GamePayload {
+    player_win_amount?: string
+    msg: number[]
+}
+
 export interface PlatformEventPayload {
     sender: string
     casino_id: number
@@ -95,6 +128,16 @@ export class GameDecoderService {
             code: environment.platformAcc,
             scope: environment.platformAcc,
         })
+        const game = result?.rows[0]
+        if (game?.meta) {
+            const meta = Buffer.from(game.meta, 'hex')
+            game.meta = JSON.parse(meta.toString())
+            if (game.meta.manifestURL) {
+                const manifest = await fetch(game.meta.manifestURL + '/manifest.json')
+                const manifestJSON = await manifest.json()
+                game.meta.manifest = manifestJSON
+            }
+        }
         return result?.rows[0]
     }
 
@@ -116,5 +159,28 @@ export class GameDecoderService {
         // const traces = tx.traces.filter(t => !!t.act.data?.event_type)
         // if (traces.length) console.dir(traces, { depth: 6 })
         return tx.traces[0]?.act?.data?.from
+    }
+
+    public parseWithSpec(event: number, data: GamePayload, spec: GameSpec): ParseState {
+        const isVarString = (x: any): x is VarString => typeof x === 'string' && x.startsWith('$')
+        const parseVariable = <T = any>(state: ParseState, v: any): T => (isVarString(v) ? state[v.substr(1)] : v) as T
+        const checkLength = (arr: any[], constraint: VarLength): boolean => {
+            if (typeof constraint === 'number') return arr.length === constraint
+            return arr.length >= constraint.min && arr.length <= constraint.max
+        }
+        const state: ParseState = {}
+        const transformer = spec.transformers.find(t => event === t.eventType && checkLength(data.msg, t.length))
+        if (!transformer) throw new Error('Transformer not found')
+        state.event = transformer.eventName
+        let offset = 0
+        for (let field of transformer.fields) {
+            if (isVarString(field.length)) field.length = parseVariable<number>(state, field.length)
+            const slice = data.msg.slice(offset, offset + field.length)
+            state[field.name] = field.mapping
+                ? slice.map(i => spec.mappings[field.mapping].map[i])
+                : field.length > 1 ? slice : slice[0]
+            offset += field.length
+        }
+        return state
     }
 }
