@@ -73,8 +73,12 @@
           <td>{{transaction.game.event}}</td>
         </tr>
         <tr *ngIf="transaction.game && transaction.game.data">
-          <td>{{ 'Game event data' | translate }}:</td>
+          <td>{{ 'Game event data (raw)' | translate }}:</td>
           <td><code>{{transaction.game.data}}</code></td>
+        </tr>
+        <tr *ngIf="transaction.game && transaction.game.event_data">
+          <td>{{ 'Game event data' | translate }}:</td>
+          <td><pre>{{transaction.game.event_data}}</pre></td>
         </tr>
       </table>
     </mat-card-content>

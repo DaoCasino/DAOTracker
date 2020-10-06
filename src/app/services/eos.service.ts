@@ -21,7 +21,7 @@ export class EosService {
   ) {
     const rpc = this.eos = new JsonRpc(environment.blockchainUrl, { fetch });
     const signatureProvider = new JsSignatureProvider([]);
-    this.api = new Api({ rpc, signatureProvider })
+    this.api = (window as any).api = new Api({ rpc, signatureProvider })
   }
 
   setApiEndpoint(url: string) {

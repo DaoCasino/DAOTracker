@@ -19,6 +19,7 @@ export class InformationComponent implements OnInit {
   ) { }
 
   async ngOnInit() {
+    (window as any).gameDecoder = this.gameDecoder
     for (const { type, data } of this.transaction.trx.trx.transaction_extensions) {
       if (type !== 0) continue;
       const sponsorType = Serialize.getTypesFromAbi(this.eosService.api.abiTypes, SPONSORSHIP_EXT).get('sponsor_ext');
@@ -35,7 +36,7 @@ export class InformationComponent implements OnInit {
       const contract = newgame.act.account
       const session = newgame.act.data.req_id
       const casino = this.transaction.traces[0]?.act?.authorization[0]?.permission
-      this.transaction.game = { contract, casino, session, bet }
+      this.transaction.game = { contract, casino, session, bet, game_id: newgame.act.data.game_id }
     }
     const gameAction = this.transaction.traces.find(t => t.act.data?.event_type in PlatformEventType)
     if (gameAction) {
@@ -44,15 +45,26 @@ export class InformationComponent implements OnInit {
       const decoded = this.gameDecoder.deserializeEvent(payload)
       if (!decoded) return
       const casino = (await this.gameDecoder.casinoById(payload.casino_id))?.contract
+      let event
+      if (payload.game_id) {
+        const gameInfo = await this.gameDecoder.gameById(payload.game_id)
+        const spec = gameInfo?.meta?.manifest?.explorerSpec
+        if (spec) {
+          event = await this.gameDecoder.parseWithSpec(payload.event_type, decoded, spec)
+          console.log(event)
+        }
+      }
       this.transaction.game = {
         casino,
         contract: payload.sender,
         session: payload.req_id,
         event: GameEventTypeMap[payload.event_type],
         win_amount: decoded.player_win_amount,
-        data: payload.data ? JSON.stringify(decoded, null, 2) : undefined
+        data: payload.data ? JSON.stringify(decoded, null, 2) : undefined,
+        event_data: event ? JSON.stringify(event, null, 2) : undefined,
+        game_id: payload.game_id
       }
-      console.log({ act, payload, decoded })
+      console.log({ act, payload, decoded, game: this.transaction.game })
     }
   }
 }
