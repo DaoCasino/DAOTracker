@@ -23,14 +23,14 @@ export class SidenavComponent implements OnInit {
   ngOnInit() {
     this.navs = [
       {
-        icon: 'dashboard',
+        icon: 'gavel',
         link: '/',
-        name: this.translate.instant('Dashboard')
+        name: this.translate.instant('Producers')
       },
       {
-        icon: 'gavel',
-        link: '/producers',
-        name: this.translate.instant('Producers')
+        icon: 'dashboard',
+        link: '/dashboard',
+        name: this.translate.instant('Dashboard')
       },
       {
         icon: 'link',

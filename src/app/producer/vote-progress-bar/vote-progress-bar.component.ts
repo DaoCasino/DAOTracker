@@ -1,4 +1,6 @@
 import { Component, OnChanges, Input } from '@angular/core';
+import { EosService } from '../../services/eos.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-vote-progress-bar',
@@ -11,12 +13,16 @@ export class VoteProgressBarComponent implements OnChanges {
   chainPercentage;
   chainNumber;
 
-  constructor() { }
+  constructor(private eos: EosService) {}
 
-  ngOnChanges() {
+  async ngOnChanges() {
     if (this.chainStatus) {
-      this.chainPercentage = (this.chainStatus.total_activated_stake / 10000 / 1000011818 * 100).toFixed(2);
-      this.chainNumber = (this.chainStatus.total_activated_stake / 1000011818 * 100000);
+      const currStats = await this.eos.api.rpc.get_currency_stats('eosio.token', environment.token)
+      const supply = Number(currStats[environment.token]?.supply?.split(' ')[0])
+      if (!supply) return
+
+      this.chainPercentage = (this.chainStatus.total_activated_stake / 10000 / supply * 100).toFixed(2);
+      this.chainNumber = (this.chainStatus.total_activated_stake / supply * 100000);
     }
   }
 
