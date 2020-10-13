@@ -1,8 +1,7 @@
-FROM node:10.16.0-stretch
-SHELL ["/bin/bash", "-c"]
+FROM node:10-alpine
 WORKDIR /opt/eostracker
 COPY . /opt/eostracker
-RUN npm install && npm run build
+RUN yarn
 
 EXPOSE 8080
-CMD ["npm", "start"]
+CMD ["yarn", "start"]
