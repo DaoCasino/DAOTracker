@@ -10,7 +10,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
-    "postinstall": "node replace.build.js && node patch.js && ng build --aot --prod"
+    "postinstall": "node replace.build.js && node patch.js && ng build --aot"
   },
   "private": true,
   "dependencies": {
