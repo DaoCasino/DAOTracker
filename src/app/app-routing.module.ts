@@ -13,6 +13,7 @@ const appRoutes: Routes = [
     component: MasterpageComponent,
     children: [
       { path: '', pathMatch: 'full', loadChildren: './producer/producer.module#ProducerModule' },
+      { path: 'producers', loadChildren: './producer/producer.module#ProducerModule' },
       { path: 'dashboard', component: DashboardComponent },
       { path: 'search', component: SearchComponent },
       { path: 'settings', component: SettingsComponent },
