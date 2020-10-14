@@ -21,8 +21,9 @@ export class VoteProgressBarComponent implements OnChanges {
       const supply = Number(currStats[environment.token]?.supply?.split(' ')[0])
       if (!supply) return
 
-      this.chainPercentage = (this.chainStatus.total_activated_stake / 10000 / supply * 100).toFixed(2);
-      this.chainNumber = (this.chainStatus.total_activated_stake / supply * 100000);
+      console.log(supply)
+      this.chainNumber = (this.chainStatus.total_activated_stake / 10000);
+      this.chainPercentage = (this.chainNumber / supply * 100).toFixed(2);
     }
   }
 
