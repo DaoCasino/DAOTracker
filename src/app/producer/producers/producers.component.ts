@@ -82,7 +82,7 @@ export class ProducersComponent implements OnInit {
               .map((producer, index) => {
             let reward = 0;
             const position = parseInt(index, 10) + 1;
-            const active = producer.is_active === 1;
+            const active = producer.is_active === 1 && position <= activeCount;
             const bad = false;// DISABLED. logic: !active && position <= activeCount;
 
             const numVotes = (producer.total_votes / this.calculateVoteWeight() / 10000).toFixed(0);
